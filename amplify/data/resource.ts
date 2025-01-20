@@ -7,11 +7,62 @@ specifies that any user authenticated via an API key can "create", "read",
 "update", and "delete" any "Todo" records.
 =========================================================================*/
 const schema = a.schema({
-  Todo: a
+  Team: a
     .model({
-      content: a.string(),
+      teamName: a.string(),
+      spreadRecord: a.customType({
+        spreadWins: a.integer(),
+        spreadLosses: a.integer()
+      })
     })
-    .authorization((allow) => [allow.owner()]),
+    .authorization((allow) => [allow.guest()]),
+  Game: a
+    .model({
+      weekId: a.id(),
+      week: a.belongsTo('Week', ' weekId'),
+      homeTeam: a.ref('Team'),
+      visitingTeam: a.ref('Team'),
+      spread: a.float(),
+      overUnder: a.float(),
+      result: a.customType({
+        homeScore: a.integer(),
+        visitingScore: a.integer()
+      })
+    }),
+  Week: a
+    .model({
+      weekNumber: a.integer(),
+      seasonId: a.id(),
+      season: a.belongsTo('Season', 'seasonId'),
+      games: a.hasMany('Game', 'weekId'),
+      scoreboard: a.hasOne('WeeklyScoreboard', 'weekId')
+    }),
+  WeeklyScoreboard: a
+    .model({
+      weekId: a.id(),
+      week: a.belongsTo('Week', 'weekId'),
+      userId: a.ref('User'),
+      pointsEarned: a.integer()
+    }),
+  Season: a
+    .model({
+      weeks: a.hasMany('Week', 'seasonId'),
+      scoreboard: a.hasOne('SeasonScoreboard', 'seasonId')
+    }),
+  SeasonScoreboard: a
+    .model({
+      seasonId: a.id(),
+      season: a.belongsTo('Season', ' seasonId'),
+      userId: a.ref('User'),
+      pointsAccrued: a.integer()
+    }),
+  Pick: a
+    .model({
+      game: a.ref('Game'),
+      user: a.ref('User'),
+      spread: a.boolean(),
+      overUnder: a.boolean()
+    }),
 });
 
 export type Schema = ClientSchema<typeof schema>;
